@@ -1,0 +1,49 @@
+HOW TO BRING THE PAYMENT BOT BACK
+==================================
+
+This folder is the Linguya payment bot for Bale (@lingubot).
+It was paused on 2026-06-18 by deleting the Railway service.
+(Your real BOT_TOKEN, ADMIN_CHAT_ID and PROVIDER_TOKEN are NOT stored in
+this repo for security — keep them in your password manager / Railway vars.)
+Nothing was lost — code is here and on GitHub.
+
+GitHub repo (private):
+  https://github.com/puyashahidi77-ui/lingubot
+
+IMPORTANT — ONLY ONE BOT PER TOKEN
+-----------------------------------
+The Bale bot token can only be used by ONE running program
+at a time. Two bots polling the same token fight over messages and both
+break. So before redeploying this payment bot, STOP your other/original
+bot first.
+
+TO REDEPLOY ON RAILWAY (2 minutes)
+-----------------------------------
+1. railway.app -> Login with GitHub
+2. New Project -> Deploy from GitHub repo -> pick "lingubot"
+3. Open the service -> Variables tab -> add:
+     BOT_TOKEN       = <your Bale bot token from BotFather>
+     ADMIN_CHAT_ID   = 1895976777
+     PROVIDER_TOKEN  = <your card number (16 digits) or Bale wallet number>
+4. Railway auto-deploys. Check Logs -> should say "Bot ready: ... lingubot".
+5. Send /start to the bot on Bale to test.
+
+WHAT THIS BOT DOES
+------------------
+- /start            -> main menu (courses / support / website)
+- /start <course>   -> jumps straight to that course's payment invoice
+                       (e.g. /start b1). Website "پرداخت با بله" button uses this.
+- Courses button    -> lists 6 courses (a1,a2,b1,b2,c1,kids)
+- Pick a course     -> sends a Bale payment invoice
+- On paid           -> notifies admin (ADMIN_CHAT_ID) of the enrollment
+
+PRICES
+------
+Set in bot.py COURSES dict, in RIAL.
+e.g. b1 = 20000000 Rial = 2,000,000 Toman.
+
+WEBSITE LINK
+------------
+Website file linguya-payment.html has a "پرداخت با بله" button that opens:
+  https://ble.ir/lingubot?start=<course>
+Keep the bot username "lingubot" or update that link in the HTML.
