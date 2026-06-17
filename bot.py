@@ -4,6 +4,9 @@ import os
 
 TOKEN = os.environ["BOT_TOKEN"]
 ADMIN_CHAT_ID = os.environ.get("ADMIN_CHAT_ID", "")  # optional: your Bale user ID for enrollment notifications
+# How you receive money on Bale: your card number (16 digits) OR Bale wallet number.
+# Set as Railway variable PROVIDER_TOKEN. Without it, invoices show but no real payout.
+PROVIDER_TOKEN = os.environ.get("PROVIDER_TOKEN", "")
 
 COURSES = {
     "a1": {"title": "انگلیسی مبتدی",   "cefr": "A1 — Starter",            "price": 14500000, "label": "۱،۴۵۰،۰۰۰ تومان"},
@@ -62,29 +65,17 @@ async def on_message(message: bale.Message):
 
 
 @client.event
-async def on_successful_payment(payment: bale.SuccessfulPayment, message: bale.Message):
+async def on_successful_payment(payment: bale.SuccessfulPayment):
     course_id = payment.invoice_payload
     course = COURSES.get(course_id, {})
 
-    confirm_text = (
-        f"✅ پرداخت موفق!\n\n"
-        f"🎓 دوره: {course.get('title', '—')}\n"
-        f"💰 مبلغ: {course.get('label', '—')}\n"
-        f"🆔 کد پیگیری: LQ-{message.from_user.id}-{payment.telegram_payment_charge_id[:8]}\n\n"
-        f"تیم لینگویا ظرف ۲۴ ساعت با شما تماس می‌گیرد و جزئیات کلاس را ارسال می‌کند.\n"
-        f"موفق باشید! 🌟"
-    )
-    await message.reply(confirm_text)
-
-    # Notify admin
-    if ADMIN_CHAT_ID and ADMIN_CHAT_ID != "YOUR_ADMIN_CHAT_ID":
+    # Notify admin (Bale's SuccessfulPayment has no buyer info, so we rely on admin notice).
+    if ADMIN_CHAT_ID:
         admin_text = (
-            f"🔔 ثبت‌نام جدید!\n"
-            f"👤 کاربر: {message.from_user.first_name} {message.from_user.last_name or ''}\n"
-            f"🆔 ID: {message.from_user.id}\n"
+            f"🔔 ثبت‌نام و پرداخت جدید!\n"
             f"📚 دوره: {course.get('title', course_id)}\n"
-            f"💰 مبلغ: {course.get('label', '—')}\n"
-            f"🧾 کد: {payment.telegram_payment_charge_id}"
+            f"💰 مبلغ پرداختی: {payment.total_amount:,} {payment.currency}\n"
+            f"🧾 payload: {course_id}"
         )
         try:
             await client.send_message(ADMIN_CHAT_ID, admin_text)
@@ -93,10 +84,10 @@ async def on_successful_payment(payment: bale.SuccessfulPayment, message: bale.M
 
 
 async def send_main_menu(message: bale.Message):
-    keyboard = bale.ReplyKeyboardMarkup()
-    keyboard.add(bale.KeyboardButton("📚 دوره‌ها"))
-    keyboard.add(bale.KeyboardButton("📞 پشتیبانی"))
-    keyboard.add(bale.KeyboardButton("🌐 وب‌سایت"))
+    keyboard = bale.MenuKeyboardMarkup()
+    keyboard.add(bale.MenuKeyboardButton("📚 دوره‌ها"))
+    keyboard.add(bale.MenuKeyboardButton("📞 پشتیبانی"))
+    keyboard.add(bale.MenuKeyboardButton("🌐 وب‌سایت"))
 
     await message.reply(
         "سلام! 👋 به ربات آکادمی زبان لینگویا خوش آمدید.\n\n"
@@ -106,9 +97,9 @@ async def send_main_menu(message: bale.Message):
 
 
 async def send_course_list(message: bale.Message):
-    keyboard = bale.ReplyKeyboardMarkup()
+    keyboard = bale.MenuKeyboardMarkup()
     for cid, c in COURSES.items():
-        keyboard.add(bale.KeyboardButton(cid))
+        keyboard.add(bale.MenuKeyboardButton(cid))
 
     lines = ["📚 دوره‌های موجود:\n"]
     for cid, c in COURSES.items():
@@ -130,7 +121,7 @@ async def send_course_invoice(message: bale.Message, course_id: str):
             f"آکادمی زبان لینگویا — خلخال، اردبیل"
         ),
         payload=course_id,
-        provider_token="",  # Bale's built-in payment — leave empty for Bale Wallet
+        provider_token=PROVIDER_TOKEN,  # your card/wallet number, set via Railway PROVIDER_TOKEN var
         prices=[bale.LabeledPrice(label=course['title'], amount=course['price'])],
         photo_url="http://linguyacademy.ir/og-image.jpg",  # optional cover image
         need_name=True,
