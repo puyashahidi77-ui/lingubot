@@ -28,6 +28,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message: bale.Message):
+    print(f"on_message fired: chat={message.chat.id} text={message.text!r}")
     if not message.text:
         return
 
