@@ -22,6 +22,7 @@ client = bale.Bot(token=TOKEN)
 
 @client.event
 async def on_ready():
+    await client.delete_webhook()
     print(f"Bot ready: {client.user}")
 
 
