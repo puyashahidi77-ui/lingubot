@@ -28,14 +28,13 @@ async def on_ready():
 
 @client.event
 async def on_message(message: bale.Message):
-    print(f"on_message fired: chat={message.chat.id} text={message.text!r}")
     if not message.text:
         return
 
     text = message.text.strip()
 
-    # /start with optional course param: /start b1
-    if text.startswith("/start"):
+    # /start with optional course param: /start b1  (case-insensitive: Bale sends "/Start")
+    if text.lower().startswith("/start"):
         parts = text.split()
         course_id = parts[1].lower() if len(parts) > 1 else None
 
